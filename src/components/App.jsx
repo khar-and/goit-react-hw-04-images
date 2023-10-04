@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 
 import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
@@ -10,46 +10,36 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Paragraf } from './App.styled';
 
-export class App extends Component {
-  state = {
-    searchName: '', //значение строки поиска
-    pictures: [], // массив изображений с бекенда
-    error: '', //для обработки ошибок запроса
-    currentPage: 1,
-    isLoading: false, //Параметр загрузчика
-    totalPages: 0, //к-во страниц всего в запросе
-  };
+const App = () => {
+  const [searchName, setSearchName] = useState('');
+  const [pictures, setPictures] = useState([]);
+  const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
 
-  componentDidUpdate(_, prevState) {
-    // Проверяем, изменился ли запрос или номер страницы
-    if (
-      prevState.searchName !== this.state.searchName ||
-      prevState.currentPage !== this.state.currentPage
-    ) {
-      this.handleAddPictures(); // Получаем и добавляем изображения в состояние
+  useEffect(() => {
+    if (searchName !== '') {
+      handleAddPictures(); // Получаем и добавляем изображения в состояние
     }
-  }
+  }, [searchName, currentPage]);
 
   // Метод для получения в стейт значения инпута поиска
-  handleSubmitSearchForm = searchName => {
-    this.setState({
-      searchName,
-      pictures: [], //Сброс картинок
-      currentPage: 1, // Сброс на 1-ю страницу
-    });
+  const handleSubmitSearchForm = searchName => {
+    setSearchName(searchName);
+    setPictures([]);
+    setCurrentPage(1);
   };
 
   // Увеличение номера страници (использ. в кнопке LoadMore)
-  loadMore = () => {
-    this.setState(prevState => ({
-      currentPage: prevState.currentPage + 1,
-    }));
+  const loadMore = () => {
+    setCurrentPage(prev => prev + 1);
   };
 
-  handleAddPictures = async () => {
-    const { searchName, currentPage } = this.state;
+  const handleAddPictures = async () => {
+    // const { searchName, currentPage } = this.state;
     try {
-      this.setState({ isLoading: true });
+      setIsLoading(true);
       const data = await fetchApi(searchName, currentPage);
 
       if (data.hits.length === 0) {
@@ -58,40 +48,41 @@ export class App extends Component {
         );
       }
 
-      this.setState(state => ({
-        pictures: [...state.pictures, ...data.hits], // Добавляем новые изображения к существующим
-        isLoading: false, // Сбрасываем загрузчик
-        error: '', // Очищаем сообщение об ошибке
-        totalPages: Math.ceil(data.totalHits / 12), // Вычисляем общее количество страниц
-      }));
+      setPictures(prev => [...prev, ...data.hits]);
+      setIsLoading(false);
+      setError('');
+      setTotalPages(Math.ceil(data.totalHits / 12));
+      // this.setState(state => ({
+      //   pictures: [...state.pictures, ...data.hits], // Добавляем новые изображения к существующим
+      //   isLoading: false, // Сбрасываем загрузчик
+      //   error: '', // Очищаем сообщение об ошибке
+      //   totalPages: Math.ceil(data.totalHits / 12), // Вычисляем общее количество страниц
+      // }));
     } catch (error) {
-      this.setState({ error: 'Something wrong!' });
+      setError('Something wrong!');
     } finally {
-      this.setState({ isLoading: false });
+      setIsLoading(false);
     }
   };
 
-  render() {
-    const { pictures, isLoading, totalPages, currentPage } = this.state;
-    return (
-      <div>
-        <Searchbar onSubmit={this.handleSubmitSearchForm} />
+  return (
+    <div>
+      <Searchbar onSubmit={handleSubmitSearchForm} />
 
-        {isLoading && <Loader />}
+      {isLoading && <Loader />}
 
-        {/* // Проверка на получение массива изображений */}
-        {pictures.length > 0 ? (
-          <ImageGallery pictures={pictures} />
-        ) : (
-          <Paragraf>The Gallery of images is empty</Paragraf>
-        )}
-        {pictures.length > 0 && totalPages !== currentPage && !isLoading && (
-          <Button onClick={this.loadMore} />
-        )}
-        <ToastContainer autoClose={3000} position={'top-center'} />
-      </div>
-    );
-  }
-}
+      {/* // Проверка на получение массива изображений */}
+      {pictures.length > 0 ? (
+        <ImageGallery pictures={pictures} />
+      ) : (
+        <Paragraf>The Gallery of images is empty</Paragraf>
+      )}
+      {pictures.length > 0 && totalPages !== currentPage && !isLoading && (
+        <Button onClick={loadMore} />
+      )}
+      <ToastContainer autoClose={3000} position={'top-center'} />
+    </div>
+  );
+};
 
 export default App;

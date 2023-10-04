@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import {
   SearchForm,
@@ -8,48 +8,46 @@ import {
   SearchBar,
 } from './Searchbar.styled';
 
-export class Searchbar extends Component {
-  state = { searchName: '' };
+const Searchbar = ({ onSubmit }) => {
+  const [searchName, setSearchName] = useState('');
 
-  handleSubmitForm = evt => {
+  const handleSubmitForm = evt => {
     evt.preventDefault();
 
     // Проверка на заполнение поля поиска
-    if (this.state.searchName.trim() === '') {
+    if (searchName.trim() === '') {
       return toast.warn('Please input the search name!');
       //   alert('Please input the search name');
     }
     // передача значения поиска в АРР-компонент
-    this.props.onSubmit(this.state.searchName);
+    onSubmit(searchName);
     // очистка поля поиска
-    this.setState({ searchName: '' });
+    setSearchName('');
   };
 
-  handleChangeSearch = evt => {
-    this.setState({ searchName: evt.currentTarget.value.toLowerCase() });
+  const handleChangeSearch = evt => {
+    setSearchName(evt.currentTarget.value.toLowerCase());
   };
 
-  render() {
-    return (
-      <SearchBar>
-        <SearchForm onSubmit={this.handleSubmitForm}>
-          <SearchButton type="submit">
-            <SearchSpan>Search</SearchSpan>
-          </SearchButton>
+  return (
+    <SearchBar>
+      <SearchForm onSubmit={handleSubmitForm}>
+        <SearchButton type="submit">
+          <SearchSpan>Search</SearchSpan>
+        </SearchButton>
 
-          <SearchInput
-            className="input"
-            type="text"
-            autoComplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            value={this.state.searchName}
-            onChange={this.handleChangeSearch}
-          />
-        </SearchForm>
-      </SearchBar>
-    );
-  }
-}
+        <SearchInput
+          className="input"
+          type="text"
+          autoComplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          value={searchName}
+          onChange={handleChangeSearch}
+        />
+      </SearchForm>
+    </SearchBar>
+  );
+};
 
 export default Searchbar;
