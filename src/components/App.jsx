@@ -13,16 +13,36 @@ import { Paragraf } from './App.styled';
 const App = () => {
   const [searchName, setSearchName] = useState('');
   const [pictures, setPictures] = useState([]);
-  const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     if (searchName !== '') {
+      const handleAddPictures = async () => {
+        try {
+          setIsLoading(true);
+          const data = await fetchApi(searchName, currentPage);
+
+          if (data.hits.length === 0) {
+            return toast.warn(
+              'The Images not found. Please, enter another Request'
+            );
+          }
+
+          setPictures(prev => [...prev, ...data.hits]);
+          setIsLoading(false);
+          setTotalPages(Math.ceil(data.totalHits / 12));
+        } catch {
+          toast.error('Something went wrong!'); // Если произошла ошибка, выводим сообщение
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
       handleAddPictures(); // Получаем и добавляем изображения в состояние
     }
-  }, [searchName, currentPage]);
+  }, [currentPage, searchName]);
 
   // Метод для получения в стейт значения инпута поиска
   const handleSubmitSearchForm = searchName => {
@@ -34,35 +54,6 @@ const App = () => {
   // Увеличение номера страници (использ. в кнопке LoadMore)
   const loadMore = () => {
     setCurrentPage(prev => prev + 1);
-  };
-
-  const handleAddPictures = async () => {
-    // const { searchName, currentPage } = this.state;
-    try {
-      setIsLoading(true);
-      const data = await fetchApi(searchName, currentPage);
-
-      if (data.hits.length === 0) {
-        return toast.warn(
-          'The Images not found. Please, enter another Request'
-        );
-      }
-
-      setPictures(prev => [...prev, ...data.hits]);
-      setIsLoading(false);
-      setError('');
-      setTotalPages(Math.ceil(data.totalHits / 12));
-      // this.setState(state => ({
-      //   pictures: [...state.pictures, ...data.hits], // Добавляем новые изображения к существующим
-      //   isLoading: false, // Сбрасываем загрузчик
-      //   error: '', // Очищаем сообщение об ошибке
-      //   totalPages: Math.ceil(data.totalHits / 12), // Вычисляем общее количество страниц
-      // }));
-    } catch (error) {
-      setError('Something wrong!');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
